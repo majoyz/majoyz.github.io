@@ -23,7 +23,7 @@
   <meta name="description" content="0. 引言有人曾经说过，Go语言为并发而生。这么说是因为，Go语言正是在多核和网络化的时代背景下诞生的原生支持并发的编程语言。Go语言从底层原生支持并发，无须第三方库，开发人员可以很轻松地在编写程序时决定怎么使用 CPU 资源。而Go语言的并发则是基于goroutine的。 1. goroutine">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Go基础之Goroutines和Channels">
-<meta property="og:url" content="http:&#x2F;&#x2F;www.t4l2.com&#x2F;2020&#x2F;04&#x2F;11&#x2F;Go%E5%9F%BA%E7%A1%80%E4%B9%8BGoroutines%E5%92%8CChannels&#x2F;index.html">
+<meta property="og:url" content="http:&#x2F;&#x2F;www.t4l2.com&#x2F;2020-04-11-Go%E5%9F%BA%E7%A1%80%E4%B9%8BGoroutines%E5%92%8CChannels.html">
 <meta property="og:site_name" content="T4L2">
 <meta property="og:description" content="0. 引言有人曾经说过，Go语言为并发而生。这么说是因为，Go语言正是在多核和网络化的时代背景下诞生的原生支持并发的编程语言。Go语言从底层原生支持并发，无须第三方库，开发人员可以很轻松地在编写程序时决定怎么使用 CPU 资源。而Go语言的并发则是基于goroutine的。 1. goroutine">
 <meta property="og:locale" content="zh_CN">
@@ -35,7 +35,7 @@
 <meta property="article:tag" content="channel">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://www.t4l2.com/2020/04/11/Go%E5%9F%BA%E7%A1%80%E4%B9%8BGoroutines%E5%92%8CChannels/">
+<link rel="canonical" href="http://www.t4l2.com/2020-04-11-Go%E5%9F%BA%E7%A1%80%E4%B9%8BGoroutines%E5%92%8CChannels.html">
 
 
 <script id="page-configurations">
@@ -169,10 +169,10 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://www.t4l2.com/2020/04/11/Go%E5%9F%BA%E7%A1%80%E4%B9%8BGoroutines%E5%92%8CChannels/">
+    <link itemprop="mainEntityOfPage" href="http://www.t4l2.com/2020-04-11-Go%E5%9F%BA%E7%A1%80%E4%B9%8BGoroutines%E5%92%8CChannels.html">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="image" content="/images/avatar.jpeg">
       <meta itemprop="name" content="Rong AI">
       <meta itemprop="description" content="Time to Learn for Everything">
     </span>
@@ -236,6 +236,23 @@
     
     
     
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Rong AI
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="/http:/www.t4l2.com/2020-04-11-Go%E5%9F%BA%E7%A1%80%E4%B9%8BGoroutines%E5%92%8CChannels.html" title="Go基础之Goroutines和Channels">http://www.t4l2.com/2020-04-11-Go基础之Goroutines和Channels.html</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
 
       <footer class="post-footer">
           <div class="post-tags">
@@ -250,7 +267,7 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2020/04/07/%E6%96%B0%E7%9A%84%E5%BC%80%E5%A7%8B/" rel="prev" title="新的开始">
+    <a href="/2020-04-07-%E6%96%B0%E7%9A%84%E5%BC%80%E5%A7%8B.html" rel="prev" title="新的开始">
       <i class="fa fa-chevron-left"></i> 新的开始
     </a></div>
       <div class="post-nav-item"></div>
@@ -319,7 +336,7 @@
       <div class="site-overview-wrap sidebar-panel">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <img class="site-author-image" itemprop="image" alt="Rong AI"
-      src="/images/avatar.png">
+      src="/images/avatar.jpeg">
   <p class="site-author-name" itemprop="name">Rong AI</p>
   <div class="site-description" itemprop="description">Time to Learn for Everything</div>
 </div>
@@ -346,6 +363,9 @@
       </div>
   </nav>
 </div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
 
 
 
@@ -367,7 +387,7 @@
 
 <div class="copyright">
   
-  &copy; 
+  &copy; 2019 – 
   <span itemprop="copyrightYear">2020</span>
   <span class="with-love">
     <i class="user"></i>
@@ -391,6 +411,8 @@
   </div>
 
   
+  
+  <script color='0,0,0' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
   <script src="/lib/anime.min.js"></script>
   <script src="/lib/velocity/velocity.min.js"></script>
   <script src="/lib/velocity/velocity.ui.min.js"></script>
