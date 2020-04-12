@@ -46,15 +46,15 @@
   };
 </script>
 
-  <meta name="description" content="兴致勃勃地建立起个人博客，写完几篇测试文章后，就丢到一边粘灰去了，一下子就是整整半年。考研过后，几乎又回到了之前那种力松劲泄的状态，对什么都提不起兴趣。 还好最近的学习也逐渐步入正轨起来了，许多事情又都有了新的进展。希望能够以此为契机，重新建立起对美好生活的向往和追求🐶！近几天应该会上传一些KubeEdge方面的代码分析，希望对自己和他人有所帮助。 让我们开始吧！ 1func main() &amp;#">
+  <meta name="description" content="兴致勃勃地建立起个人博客，写完几篇测试文章后，就丢到一边粘灰去了，一下子就是整整半年。考研过后，几乎又回到了之前那种力松劲泄的状态，对什么都提不起兴趣。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="新的开始">
 <meta property="og:url" content="http:&#x2F;&#x2F;www.t4l2.com&#x2F;2020&#x2F;04&#x2F;07&#x2F;%E6%96%B0%E7%9A%84%E5%BC%80%E5%A7%8B&#x2F;index.html">
 <meta property="og:site_name" content="T4L2">
-<meta property="og:description" content="兴致勃勃地建立起个人博客，写完几篇测试文章后，就丢到一边粘灰去了，一下子就是整整半年。考研过后，几乎又回到了之前那种力松劲泄的状态，对什么都提不起兴趣。 还好最近的学习也逐渐步入正轨起来了，许多事情又都有了新的进展。希望能够以此为契机，重新建立起对美好生活的向往和追求🐶！近几天应该会上传一些KubeEdge方面的代码分析，希望对自己和他人有所帮助。 让我们开始吧！ 1func main() &amp;#">
+<meta property="og:description" content="兴致勃勃地建立起个人博客，写完几篇测试文章后，就丢到一边粘灰去了，一下子就是整整半年。考研过后，几乎又回到了之前那种力松劲泄的状态，对什么都提不起兴趣。">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2020-04-07T13:15:22.000Z">
-<meta property="article:modified_time" content="2020-04-07T13:40:59.691Z">
+<meta property="article:modified_time" content="2020-04-12T01:09:14.101Z">
 <meta property="article:author" content="Rong AI">
 <meta property="article:tag" content="测试">
 <meta name="twitter:card" content="summary">
@@ -207,20 +207,9 @@
               <span class="post-meta-item-icon">
                 <i class="fa fa-calendar-o"></i>
               </span>
-              <span class="post-meta-item-text">发表于</span>
+              <span class="post-meta-item-text">发表：</span>
 
               <time title="创建时间：2020-04-07 21:15:22" itemprop="dateCreated datePublished" datetime="2020-04-07T21:15:22+08:00">2020-04-07</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E9%9A%8F%E7%AC%94/" itemprop="url" rel="index">
-                    <span itemprop="name">随笔</span>
-                  </a>
-                </span>
             </span>
 
           
@@ -235,6 +224,8 @@
 
       
         <p>兴致勃勃地建立起个人博客，写完几篇测试文章后，就丢到一边粘灰去了，一下子就是整整半年。考研过后，几乎又回到了之前那种力松劲泄的状态，对什么都提不起兴趣。</p>
+<a id="more"></a>
+
 <p>还好最近的学习也逐渐步入正轨起来了，许多事情又都有了新的进展。希望能够以此为契机，重新建立起对美好生活的向往和追求🐶！近几天应该会上传一些<strong>KubeEdge</strong>方面的代码分析，希望对自己和他人有所帮助。</p>
 <p><em>让我们开始吧！</em></p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">2</span></pre></td><td class="code"><pre><span class="line">   command := app.NewCloudCoreCommand()</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">3</span></pre></td><td class="code"><pre><span class="line">   logs.InitLogs()</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">4</span></pre></td><td class="code"><pre><span class="line">   <span class="keyword">defer</span> logs.FlushLogs()</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">5</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">6</span></pre></td><td class="code"><pre><span class="line">   <span class="keyword">if</span> err := command.Execute(); err != <span class="literal">nil</span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">7</span></pre></td><td class="code"><pre><span class="line">      os.Exit(<span class="number">1</span>)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">8</span></pre></td><td class="code"><pre><span class="line">   &#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">9</span></pre></td><td class="code"><pre><span class="line">&#125;</span></pre></td></tr></table></figure>
