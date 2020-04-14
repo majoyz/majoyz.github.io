@@ -20,21 +20,21 @@
     var CONFIG = {"hostname":"www.t4l2.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="1. CloudHub.Start()CloudHub是cloudcore中比较重要的组件之一，负责与边端EdgeHub进行通信。经过对CloudCore源码的整体分析可知，云端各个组件的重点在于各自的Start()函数。于是，我们进入cloudhub.go文件，查看CloudHub的Start()函数。 1func (a *cloudHub) Start() &amp;#123;2    objectS">
+  <meta name="description" content="1. CloudHub.Start()CloudHub是cloudcore中比较重要的组件之一，负责与边端EdgeHub进行通信。经过对CloudCore源码的整体分析可知，云端各个组件的重点在于各自的Start()函数。于是，我们进入cloudhub.go文件，查看CloudHub的Start()函数。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="KubeEdge源码分析之CloudHub">
-<meta property="og:url" content="http:&#x2F;&#x2F;www.t4l2.com&#x2F;2020-04-14-KubeEdge%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E4%B9%8BCloudHub.html">
+<meta property="og:title" content="KubeEdge源码分析之CloudHub（一）">
+<meta property="og:url" content="http:&#x2F;&#x2F;www.t4l2.com&#x2F;2020-04-14-KubeEdge%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E4%B9%8BCloudHub%EF%BC%88%E4%B8%80%EF%BC%89.html">
 <meta property="og:site_name" content="T4L2">
-<meta property="og:description" content="1. CloudHub.Start()CloudHub是cloudcore中比较重要的组件之一，负责与边端EdgeHub进行通信。经过对CloudCore源码的整体分析可知，云端各个组件的重点在于各自的Start()函数。于是，我们进入cloudhub.go文件，查看CloudHub的Start()函数。 1func (a *cloudHub) Start() &amp;#123;2    objectS">
+<meta property="og:description" content="1. CloudHub.Start()CloudHub是cloudcore中比较重要的组件之一，负责与边端EdgeHub进行通信。经过对CloudCore源码的整体分析可知，云端各个组件的重点在于各自的Start()函数。于是，我们进入cloudhub.go文件，查看CloudHub的Start()函数。">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2020-04-14T01:05:59.000Z">
-<meta property="article:modified_time" content="2020-04-14T02:15:37.287Z">
+<meta property="article:modified_time" content="2020-04-14T07:44:33.501Z">
 <meta property="article:author" content="RongAI">
 <meta property="article:tag" content="kubeedge">
 <meta property="article:tag" content="cloudhub">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://www.t4l2.com/2020-04-14-KubeEdge%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E4%B9%8BCloudHub.html">
+<link rel="canonical" href="http://www.t4l2.com/2020-04-14-KubeEdge%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E4%B9%8BCloudHub%EF%BC%88%E4%B8%80%EF%BC%89.html">
 
 
 <script id="page-configurations">
@@ -47,7 +47,7 @@
   };
 </script>
 
-  <title>KubeEdge源码分析之CloudHub | T4L2</title>
+  <title>KubeEdge源码分析之CloudHub（一） | T4L2</title>
   
 
 
@@ -168,7 +168,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://www.t4l2.com/2020-04-14-KubeEdge%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E4%B9%8BCloudHub.html">
+    <link itemprop="mainEntityOfPage" href="http://www.t4l2.com/2020-04-14-KubeEdge%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E4%B9%8BCloudHub%EF%BC%88%E4%B8%80%EF%BC%89.html">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.jpeg">
@@ -181,7 +181,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          KubeEdge源码分析之CloudHub
+          KubeEdge源码分析之CloudHub（一）
         </h1>
 
         <div class="post-meta">
@@ -215,6 +215,8 @@
 
       
         <h4 id="1-CloudHub-Start"><a href="#1-CloudHub-Start" class="headerlink" title="1. CloudHub.Start()"></a>1. CloudHub.Start()</h4><p>CloudHub是cloudcore中比较重要的组件之一，负责与边端EdgeHub进行通信。经过对CloudCore源码的整体分析可知，云端各个组件的重点在于各自的Start()函数。于是，我们进入cloudhub.go文件，查看CloudHub的Start()函数。</p>
+<a id="more"></a>
+
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(a *cloudHub)</span> <span class="title">Start</span><span class="params">()</span></span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">2</span></pre></td><td class="code"><pre><span class="line">    objectSyncController := newObjectSyncController()</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">3</span></pre></td><td class="code"><pre><span class="line"> </span></pre></td></tr><tr><td class="gutter"><pre><span class="line">4</span></pre></td><td class="code"><pre><span class="line">    <span class="keyword">if</span> !cache.WaitForCacheSync(beehiveContext.Done(),</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">5</span></pre></td><td class="code"><pre><span class="line">        objectSyncController.ClusterObjectSyncSynced,</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">6</span></pre></td><td class="code"><pre><span class="line">        objectSyncController.ObjectSyncSynced,</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">7</span></pre></td><td class="code"><pre><span class="line">    ) &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">8</span></pre></td><td class="code"><pre><span class="line">        klog.Errorf(<span class="string">"unable to sync caches for objectSyncController"</span>)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">9</span></pre></td><td class="code"><pre><span class="line">        os.Exit(<span class="number">1</span>)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">10</span></pre></td><td class="code"><pre><span class="line">    &#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">11</span></pre></td><td class="code"><pre><span class="line">    </span></pre></td></tr><tr><td class="gutter"><pre><span class="line">12</span></pre></td><td class="code"><pre><span class="line">    <span class="comment">// 创建一个通道消息队列</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">13</span></pre></td><td class="code"><pre><span class="line">    messageq := channelq.NewChannelMessageQueue(objectSyncController)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">14</span></pre></td><td class="code"><pre><span class="line"> </span></pre></td></tr><tr><td class="gutter"><pre><span class="line">15</span></pre></td><td class="code"><pre><span class="line">    <span class="comment">// start dispatch message from the cloud to edge node</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">16</span></pre></td><td class="code"><pre><span class="line">    <span class="keyword">go</span> messageq.DispatchMessage()</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">17</span></pre></td><td class="code"><pre><span class="line"> </span></pre></td></tr><tr><td class="gutter"><pre><span class="line">18</span></pre></td><td class="code"><pre><span class="line">    servers.StartCloudHub(messageq)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">19</span></pre></td><td class="code"><pre><span class="line"> </span></pre></td></tr><tr><td class="gutter"><pre><span class="line">20</span></pre></td><td class="code"><pre><span class="line">    <span class="keyword">if</span> hubconfig.Config.UnixSocket.Enable &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">21</span></pre></td><td class="code"><pre><span class="line">        <span class="comment">// The uds server is only used to communicate with csi driver from kubeedge on cloud.</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">22</span></pre></td><td class="code"><pre><span class="line">        <span class="comment">// It is not used to communicate between cloud and edge.</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">23</span></pre></td><td class="code"><pre><span class="line">        <span class="keyword">go</span> udsserver.StartServer(hubconfig.Config.UnixSocket.Address)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">24</span></pre></td><td class="code"><pre><span class="line">    &#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">25</span></pre></td><td class="code"><pre><span class="line">&#125;</span></pre></td></tr></table></figure>
 
 <p>Start()函数中首先创建了一个同步控制器，这是cloudcore的四大组件之一，我们将在另一片文章中单独介绍。下面，Start()函数主要做了4件事：</p>
@@ -233,7 +235,9 @@
 <p>可见，该类型中除了前面创建的同步控制器，就是4个Map类型，它们的key都是nodeID，value就是各自名称代表的东西，例如queuePool的value就是NodeQueue。</p>
 <h4 id="3-消息分发"><a href="#3-消息分发" class="headerlink" title="3. 消息分发"></a>3. 消息分发</h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(q *ChannelMessageQueue)</span> <span class="title">DispatchMessage</span><span class="params">()</span></span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">2</span></pre></td><td class="code"><pre><span class="line">    <span class="keyword">for</span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">3</span></pre></td><td class="code"><pre><span class="line">        <span class="comment">// select语句类似于switch语句，在这里先检测beehiveContext有没有被cancel</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">4</span></pre></td><td class="code"><pre><span class="line">        <span class="keyword">select</span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">5</span></pre></td><td class="code"><pre><span class="line">        <span class="keyword">case</span> &lt;-beehiveContext.Done():</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">6</span></pre></td><td class="code"><pre><span class="line">            klog.Warning(<span class="string">"Cloudhub channel eventqueue dispatch message loop stoped"</span>)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">7</span></pre></td><td class="code"><pre><span class="line">            <span class="keyword">return</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">8</span></pre></td><td class="code"><pre><span class="line">        <span class="keyword">default</span>:</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">9</span></pre></td><td class="code"><pre><span class="line">        &#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">10</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">11</span></pre></td><td class="code"><pre><span class="line">        <span class="comment">// Receive实际上是接收Cannel的消息，这个channel是cloudhub专门用来接收消息的</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">12</span></pre></td><td class="code"><pre><span class="line">        msg, err := beehiveContext.Receive(model.SrcCloudHub)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">13</span></pre></td><td class="code"><pre><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">14</span></pre></td><td class="code"><pre><span class="line">            klog.Info(<span class="string">"receive not Message format message"</span>)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">15</span></pre></td><td class="code"><pre><span class="line">            <span class="keyword">continue</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">16</span></pre></td><td class="code"><pre><span class="line">        &#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">17</span></pre></td><td class="code"><pre><span class="line">        nodeID, err := GetNodeID(&amp;msg)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">18</span></pre></td><td class="code"><pre><span class="line">        <span class="keyword">if</span> nodeID == <span class="string">""</span> || err != <span class="literal">nil</span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">19</span></pre></td><td class="code"><pre><span class="line">            klog.Warning(<span class="string">"node id is not found in the message"</span>)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">20</span></pre></td><td class="code"><pre><span class="line">            <span class="keyword">continue</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">21</span></pre></td><td class="code"><pre><span class="line">        &#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">22</span></pre></td><td class="code"><pre><span class="line">        <span class="comment">// 判断资源类型是不是podlist等</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">23</span></pre></td><td class="code"><pre><span class="line">        <span class="keyword">if</span> isListResource(&amp;msg) &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">24</span></pre></td><td class="code"><pre><span class="line">            q.addListMessageToQueue(nodeID, &amp;msg)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">25</span></pre></td><td class="code"><pre><span class="line">        &#125; <span class="keyword">else</span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">26</span></pre></td><td class="code"><pre><span class="line">            q.addMessageToQueue(nodeID, &amp;msg)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">27</span></pre></td><td class="code"><pre><span class="line">        &#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">28</span></pre></td><td class="code"><pre><span class="line">    &#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">29</span></pre></td><td class="code"><pre><span class="line">&#125;</span></pre></td></tr></table></figure>
 
-<p>在消息分发函数DispatchMessage()中，Select和Channel的关系可以参见我的博文“<a href="http://www.t4l2.com/2020-04-11-Go基础之Goroutines和Channels.html">Go基础之Goroutines和Channels</a>”，在这里的主要作用是监测beehiveContext有没有被Cancel。通过beehiveContext接收其他组件发给CloudHub的消息msg，beehiveContext是KubeEdge组件间通信的基础，将单独一篇博客介绍。最后，将接收到的消息存到前面的信道消息队列的各个Map中去。其中，queue存放messagekey，也就是msg.Header.ID，store存放msg本身</p>
+<p>在消息分发函数DispatchMessage()中，Select和Channel的关系可以参见我的博文“<a href="http://www.t4l2.com/2020-04-11-Go基础之Goroutines和Channels.html">Go基础之Goroutines和Channels</a>”，在这里的主要作用是监测beehiveContext有没有被Cancel。通过beehiveContext接收其他组件发给CloudHub的消息msg，beehiveContext是KubeEdge组件间通信的基础，将单独一篇博客介绍。最后，将接收到的消息存到前面的信道消息队列的各个Map中去，其中，queue存放messagekey，也就是msg.Header.ID，store存放msg本身。至于ListMessage和Message有什么区别呢？从后面的写操作中我们可以看到，一般的Message在发送后要求边缘回复一个ack消息，而ListMessage发送后就直接删除了云端该消息的缓存，也不需要ack消息，详情可见CloudHub的第二篇博文。</p>
+<p><em>在KubeEdge 1.2的更新中，云端发送状态同步消息到边缘时，边缘在接收并且持久化成功后，会回复状态同步成功的 ACK 消息给云端。如果云端未收到边缘状态同步成功的消息回复，则由业务层代码触发重传机制，重新进行状态同步。可见，这里的Message应该就是需要ack消息的状态同步消息。</em></p>
+<p>到此为止，CloudHub已经做了一件事，那就是云端其他组件发来的消息存到信道消息队列中去。</p>
 
     </div>
 
@@ -249,7 +253,7 @@
   </li>
   <li class="post-copyright-link">
     <strong>本文链接：</strong>
-    <a href="/http:/www.t4l2.com/2020-04-14-KubeEdge%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E4%B9%8BCloudHub.html" title="KubeEdge源码分析之CloudHub">http://www.t4l2.com/2020-04-14-KubeEdge源码分析之CloudHub.html</a>
+    <a href="/http:/www.t4l2.com/2020-04-14-KubeEdge%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E4%B9%8BCloudHub%EF%BC%88%E4%B8%80%EF%BC%89.html" title="KubeEdge源码分析之CloudHub（一）">http://www.t4l2.com/2020-04-14-KubeEdge源码分析之CloudHub（一）.html</a>
   </li>
   <li class="post-copyright-license">
     <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
@@ -273,7 +277,10 @@
     <a href="/2020-04-13-KubeEdge%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E4%B9%8BEdgeController.html" rel="prev" title="KubeEdge源码分析之EdgeController">
       <i class="fa fa-chevron-left"></i> KubeEdge源码分析之EdgeController
     </a></div>
-      <div class="post-nav-item"></div>
+      <div class="post-nav-item">
+    <a href="/2020-04-14-KubeEdge%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E4%B9%8BCloudHub%EF%BC%88%E4%BA%8C%EF%BC%89.html" rel="next" title="KubeEdge源码分析之CloudHub（二）">
+      KubeEdge源码分析之CloudHub（二） <i class="fa fa-chevron-right"></i>
+    </a></div>
     </div>
       </footer>
     
@@ -348,7 +355,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-count">9</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>

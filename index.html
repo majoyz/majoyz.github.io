@@ -162,7 +162,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://www.t4l2.com/2020-04-14-KubeEdge%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E4%B9%8BCloudHub.html">
+    <link itemprop="mainEntityOfPage" href="http://www.t4l2.com/2020-04-14-KubeEdge%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E4%B9%8BCloudHub%EF%BC%88%E4%BA%8C%EF%BC%89.html">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.jpeg">
@@ -176,7 +176,81 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2020-04-14-KubeEdge%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E4%B9%8BCloudHub.html" class="post-title-link" itemprop="url">KubeEdge源码分析之CloudHub</a>
+            <a href="/2020-04-14-KubeEdge%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E4%B9%8BCloudHub%EF%BC%88%E4%BA%8C%EF%BC%89.html" class="post-title-link" itemprop="url">KubeEdge源码分析之CloudHub（二）</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-04-14 14:14:05" itemprop="dateCreated datePublished" datetime="2020-04-14T14:14:05+08:00">2020-04-14</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/kubeedge/" itemprop="url" rel="index"><span itemprop="name">kubeedge</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h4 id="1-CloudHub服务之InitHandler"><a href="#1-CloudHub服务之InitHandler" class="headerlink" title="1. CloudHub服务之InitHandler()"></a>1. CloudHub服务之InitHandler()</h4><p>在上一篇文章中，CloudHub已经把云端其他组件发来的消息分发入了信道消息队列中目标边缘节点对应的nodeQueue和nodeStore当中，下面需要将这些消息发送给EdgeHub，并处理EdgeHub发来的消息。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020-04-14-KubeEdge%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E4%B9%8BCloudHub%EF%BC%88%E4%BA%8C%EF%BC%89.html#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.t4l2.com/2020-04-14-KubeEdge%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E4%B9%8BCloudHub%EF%BC%88%E4%B8%80%EF%BC%89.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpeg">
+      <meta itemprop="name" content="RongAI">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="T4L2">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020-04-14-KubeEdge%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E4%B9%8BCloudHub%EF%BC%88%E4%B8%80%EF%BC%89.html" class="post-title-link" itemprop="url">KubeEdge源码分析之CloudHub（一）</a>
         </h2>
 
         <div class="post-meta">
@@ -210,26 +284,14 @@
 
       
           <h4 id="1-CloudHub-Start"><a href="#1-CloudHub-Start" class="headerlink" title="1. CloudHub.Start()"></a>1. CloudHub.Start()</h4><p>CloudHub是cloudcore中比较重要的组件之一，负责与边端EdgeHub进行通信。经过对CloudCore源码的整体分析可知，云端各个组件的重点在于各自的Start()函数。于是，我们进入cloudhub.go文件，查看CloudHub的Start()函数。</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(a *cloudHub)</span> <span class="title">Start</span><span class="params">()</span></span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">2</span></pre></td><td class="code"><pre><span class="line">    objectSyncController := newObjectSyncController()</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">3</span></pre></td><td class="code"><pre><span class="line"> </span></pre></td></tr><tr><td class="gutter"><pre><span class="line">4</span></pre></td><td class="code"><pre><span class="line">    <span class="keyword">if</span> !cache.WaitForCacheSync(beehiveContext.Done(),</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">5</span></pre></td><td class="code"><pre><span class="line">        objectSyncController.ClusterObjectSyncSynced,</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">6</span></pre></td><td class="code"><pre><span class="line">        objectSyncController.ObjectSyncSynced,</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">7</span></pre></td><td class="code"><pre><span class="line">    ) &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">8</span></pre></td><td class="code"><pre><span class="line">        klog.Errorf(<span class="string">"unable to sync caches for objectSyncController"</span>)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">9</span></pre></td><td class="code"><pre><span class="line">        os.Exit(<span class="number">1</span>)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">10</span></pre></td><td class="code"><pre><span class="line">    &#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">11</span></pre></td><td class="code"><pre><span class="line">    </span></pre></td></tr><tr><td class="gutter"><pre><span class="line">12</span></pre></td><td class="code"><pre><span class="line">    <span class="comment">// 创建一个通道消息队列</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">13</span></pre></td><td class="code"><pre><span class="line">    messageq := channelq.NewChannelMessageQueue(objectSyncController)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">14</span></pre></td><td class="code"><pre><span class="line"> </span></pre></td></tr><tr><td class="gutter"><pre><span class="line">15</span></pre></td><td class="code"><pre><span class="line">    <span class="comment">// start dispatch message from the cloud to edge node</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">16</span></pre></td><td class="code"><pre><span class="line">    <span class="keyword">go</span> messageq.DispatchMessage()</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">17</span></pre></td><td class="code"><pre><span class="line"> </span></pre></td></tr><tr><td class="gutter"><pre><span class="line">18</span></pre></td><td class="code"><pre><span class="line">    servers.StartCloudHub(messageq)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">19</span></pre></td><td class="code"><pre><span class="line"> </span></pre></td></tr><tr><td class="gutter"><pre><span class="line">20</span></pre></td><td class="code"><pre><span class="line">    <span class="keyword">if</span> hubconfig.Config.UnixSocket.Enable &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">21</span></pre></td><td class="code"><pre><span class="line">        <span class="comment">// The uds server is only used to communicate with csi driver from kubeedge on cloud.</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">22</span></pre></td><td class="code"><pre><span class="line">        <span class="comment">// It is not used to communicate between cloud and edge.</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">23</span></pre></td><td class="code"><pre><span class="line">        <span class="keyword">go</span> udsserver.StartServer(hubconfig.Config.UnixSocket.Address)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">24</span></pre></td><td class="code"><pre><span class="line">    &#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">25</span></pre></td><td class="code"><pre><span class="line">&#125;</span></pre></td></tr></table></figure>
-
-<p>Start()函数中首先创建了一个同步控制器，这是cloudcore的四大组件之一，我们将在另一片文章中单独介绍。下面，Start()函数主要做了4件事：</p>
-<ul>
-<li>创建了一个信道消息队列messageq</li>
-<li>创建了消息分发的goroutine</li>
-<li>启动了CloudHub服务</li>
-<li>启动了UDS Server（可选）</li>
-</ul>
-<h4 id="2-信道消息队列"><a href="#2-信道消息队列" class="headerlink" title="2. 信道消息队列"></a>2. 信道消息队列</h4><p>那么，让我们首先来看一下信道消息队列的创建：</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewChannelMessageQueue</span><span class="params">(objectSyncController *hubconfig.ObjectSyncController)</span> *<span class="title">ChannelMessageQueue</span></span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">2</span></pre></td><td class="code"><pre><span class="line">    <span class="keyword">return</span> &amp;ChannelMessageQueue&#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">3</span></pre></td><td class="code"><pre><span class="line">        ObjectSyncController: objectSyncController,</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">4</span></pre></td><td class="code"><pre><span class="line">    &#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">5</span></pre></td><td class="code"><pre><span class="line">&#125;</span></pre></td></tr></table></figure>
-
-<p>可见，messageq是一个ChannelMessageQueue类型，具体如下：</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> ChannelMessageQueue <span class="keyword">struct</span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">2</span></pre></td><td class="code"><pre><span class="line">    queuePool sync.Map <span class="comment">// k：nodeID，v：NodeQueue</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">3</span></pre></td><td class="code"><pre><span class="line">    storePool sync.Map <span class="comment">// k：nodeID，v：NodeStore</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">4</span></pre></td><td class="code"><pre><span class="line">    <span class="comment">// 队列和存储都是在节点注册的时候分配给他们的，在那两个loop中处理</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">5</span></pre></td><td class="code"><pre><span class="line">    listQueuePool sync.Map <span class="comment">// k：nodeID，v：NodeListQueue</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">6</span></pre></td><td class="code"><pre><span class="line">    listStorePool sync.Map <span class="comment">// k：nodeID，v：NodeListStore</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">7</span></pre></td><td class="code"><pre><span class="line"> </span></pre></td></tr><tr><td class="gutter"><pre><span class="line">8</span></pre></td><td class="code"><pre><span class="line">    ObjectSyncController *hubconfig.ObjectSyncController</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">9</span></pre></td><td class="code"><pre><span class="line">&#125;</span></pre></td></tr></table></figure>
-
-<p>可见，该类型中除了前面创建的同步控制器，就是4个Map类型，它们的key都是nodeID，value就是各自名称代表的东西，例如queuePool的value就是NodeQueue。</p>
-<h4 id="3-消息分发"><a href="#3-消息分发" class="headerlink" title="3. 消息分发"></a>3. 消息分发</h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(q *ChannelMessageQueue)</span> <span class="title">DispatchMessage</span><span class="params">()</span></span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">2</span></pre></td><td class="code"><pre><span class="line">    <span class="keyword">for</span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">3</span></pre></td><td class="code"><pre><span class="line">        <span class="comment">// select语句类似于switch语句，在这里先检测beehiveContext有没有被cancel</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">4</span></pre></td><td class="code"><pre><span class="line">        <span class="keyword">select</span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">5</span></pre></td><td class="code"><pre><span class="line">        <span class="keyword">case</span> &lt;-beehiveContext.Done():</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">6</span></pre></td><td class="code"><pre><span class="line">            klog.Warning(<span class="string">"Cloudhub channel eventqueue dispatch message loop stoped"</span>)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">7</span></pre></td><td class="code"><pre><span class="line">            <span class="keyword">return</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">8</span></pre></td><td class="code"><pre><span class="line">        <span class="keyword">default</span>:</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">9</span></pre></td><td class="code"><pre><span class="line">        &#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">10</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">11</span></pre></td><td class="code"><pre><span class="line">        <span class="comment">// Receive实际上是接收Cannel的消息，这个channel是cloudhub专门用来接收消息的</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">12</span></pre></td><td class="code"><pre><span class="line">        msg, err := beehiveContext.Receive(model.SrcCloudHub)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">13</span></pre></td><td class="code"><pre><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">14</span></pre></td><td class="code"><pre><span class="line">            klog.Info(<span class="string">"receive not Message format message"</span>)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">15</span></pre></td><td class="code"><pre><span class="line">            <span class="keyword">continue</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">16</span></pre></td><td class="code"><pre><span class="line">        &#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">17</span></pre></td><td class="code"><pre><span class="line">        nodeID, err := GetNodeID(&amp;msg)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">18</span></pre></td><td class="code"><pre><span class="line">        <span class="keyword">if</span> nodeID == <span class="string">""</span> || err != <span class="literal">nil</span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">19</span></pre></td><td class="code"><pre><span class="line">            klog.Warning(<span class="string">"node id is not found in the message"</span>)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">20</span></pre></td><td class="code"><pre><span class="line">            <span class="keyword">continue</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">21</span></pre></td><td class="code"><pre><span class="line">        &#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">22</span></pre></td><td class="code"><pre><span class="line">        <span class="comment">// 判断资源类型是不是podlist等</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">23</span></pre></td><td class="code"><pre><span class="line">        <span class="keyword">if</span> isListResource(&amp;msg) &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">24</span></pre></td><td class="code"><pre><span class="line">            q.addListMessageToQueue(nodeID, &amp;msg)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">25</span></pre></td><td class="code"><pre><span class="line">        &#125; <span class="keyword">else</span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">26</span></pre></td><td class="code"><pre><span class="line">            q.addMessageToQueue(nodeID, &amp;msg)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">27</span></pre></td><td class="code"><pre><span class="line">        &#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">28</span></pre></td><td class="code"><pre><span class="line">    &#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">29</span></pre></td><td class="code"><pre><span class="line">&#125;</span></pre></td></tr></table></figure>
-
-<p>在消息分发函数DispatchMessage()中，Select和Channel的关系可以参见我的博文“<a href="http://www.t4l2.com/2020-04-11-Go基础之Goroutines和Channels.html">Go基础之Goroutines和Channels</a>”，在这里的主要作用是监测beehiveContext有没有被Cancel。通过beehiveContext接收其他组件发给CloudHub的消息msg，beehiveContext是KubeEdge组件间通信的基础，将单独一篇博客介绍。最后，将接收到的消息存到前面的信道消息队列的各个Map中去。其中，queue存放messagekey，也就是msg.Header.ID，store存放msg本身</p>
-
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020-04-14-KubeEdge%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E4%B9%8BCloudHub%EF%BC%88%E4%B8%80%EF%BC%89.html#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -820,7 +882,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-count">9</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
