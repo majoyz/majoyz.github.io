@@ -162,6 +162,85 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.t4l2.com/2020-04-17-KubeEdge%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E4%B9%8BDeviceController.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpeg">
+      <meta itemprop="name" content="RongAI">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="T4L2">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020-04-17-KubeEdge%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E4%B9%8BDeviceController.html" class="post-title-link" itemprop="url">KubeEdge源码分析之DeviceController</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-04-17 08:23:52" itemprop="dateCreated datePublished" datetime="2020-04-17T08:23:52+08:00">2020-04-17</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/kubeedge/" itemprop="url" rel="index"><span itemprop="name">kubeedge</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h4 id="1-设备控制器概览"><a href="#1-设备控制器概览" class="headerlink" title="1. 设备控制器概览"></a>1. 设备控制器概览</h4><p>DeviceController是KubeEdge云端部分比较重要的组件之一，主要负责接入和管理边缘设备、设备元数据云边协同。在开始之前，首先介绍一下两种资源：</p>
+<ul>
+<li>设备模板抽象（DeviceModel）：包含一类设备的通用属性字段（properties）以及属性访问方式字段（propertyVisitors）</li>
+<li>设备实例定义（DeviceInstance）：包含从设备模板继承的属性字段（deviceModelRef）、访问协议字段（protocol）、设备关联节点信息字段（nodeSelector）以及从设备获取的属性字段（status.twins）</li>
+</ul>
+<p>经过对CloudCore源码的整体分析可知，云端各个组件的重点在于各自的Start()函数。于是，我们进入devicecontroller.go文件，查看DeviceController的Start()函数。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020-04-17-KubeEdge%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E4%B9%8BDeviceController.html#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://www.t4l2.com/2020-04-14-KubeEdge%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E4%B9%8BCloudHub%EF%BC%88%E4%BA%8C%EF%BC%89.html">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -882,7 +961,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">9</span>
+          <span class="site-state-item-count">10</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -895,7 +974,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-count">7</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
