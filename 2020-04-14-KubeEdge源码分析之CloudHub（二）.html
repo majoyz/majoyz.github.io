@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.1.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.t4l2.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="1. CloudHub服务之InitHandler()在上一篇文章中，CloudHub已经把云端其他组件发来的消息分发入了信道消息队列中目标边缘节点对应的nodeQueue和nodeStore当中，下面需要将这些消息发送给EdgeHub，并处理EdgeHub发来的消息。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="KubeEdge源码分析之CloudHub（二）">
+<meta property="og:url" content="http:&#x2F;&#x2F;www.t4l2.com&#x2F;2020-04-14-KubeEdge%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E4%B9%8BCloudHub%EF%BC%88%E4%BA%8C%EF%BC%89.html">
+<meta property="og:site_name" content="T4L2">
+<meta property="og:description" content="1. CloudHub服务之InitHandler()在上一篇文章中，CloudHub已经把云端其他组件发来的消息分发入了信道消息队列中目标边缘节点对应的nodeQueue和nodeStore当中，下面需要将这些消息发送给EdgeHub，并处理EdgeHub发来的消息。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-04-14T06:14:05.000Z">
+<meta property="article:modified_time" content="2020-04-14T07:41:35.005Z">
+<meta property="article:author" content="RongAI">
+<meta property="article:tag" content="kubeedge">
+<meta property="article:tag" content="cloudhub">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://www.t4l2.com/2020-04-14-KubeEdge%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E4%B9%8BCloudHub%EF%BC%88%E4%BA%8C%EF%BC%89.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>KubeEdge源码分析之CloudHub（二） | T4L2</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">T4L2</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Time to learn for everything</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.t4l2.com/2020-04-14-KubeEdge%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E4%B9%8BCloudHub%EF%BC%88%E4%BA%8C%EF%BC%89.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="RongAI">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="T4L2">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          KubeEdge源码分析之CloudHub（二）
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-04-14 14:14:05" itemprop="dateCreated datePublished" datetime="2020-04-14T14:14:05+08:00">2020-04-14</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/kubeedge/" itemprop="url" rel="index"><span itemprop="name">kubeedge</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h4 id="1-CloudHub服务之InitHandler"><a href="#1-CloudHub服务之InitHandler" class="headerlink" title="1. CloudHub服务之InitHandler()"></a>1. CloudHub服务之InitHandler()</h4><p>在上一篇文章中，CloudHub已经把云端其他组件发来的消息分发入了信道消息队列中目标边缘节点对应的nodeQueue和nodeStore当中，下面需要将这些消息发送给EdgeHub，并处理EdgeHub发来的消息。</p>
+<a id="more"></a>
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">StartCloudHub</span><span class="params">(messageq *channelq.ChannelMessageQueue)</span></span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">2</span></pre></td><td class="code"><pre><span class="line">    handler.InitHandler(messageq)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">3</span></pre></td><td class="code"><pre><span class="line">    <span class="comment">// start websocket server</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">4</span></pre></td><td class="code"><pre><span class="line">    <span class="keyword">if</span> hubconfig.Config.WebSocket.Enable &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">5</span></pre></td><td class="code"><pre><span class="line">        <span class="keyword">go</span> startWebsocketServer()</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">6</span></pre></td><td class="code"><pre><span class="line">    &#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">7</span></pre></td><td class="code"><pre><span class="line">    <span class="comment">// start quic server</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">8</span></pre></td><td class="code"><pre><span class="line">    <span class="keyword">if</span> hubconfig.Config.Quic.Enable &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">9</span></pre></td><td class="code"><pre><span class="line">        <span class="keyword">go</span> startQuicServer()</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">10</span></pre></td><td class="code"><pre><span class="line">    &#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">11</span></pre></td><td class="code"><pre><span class="line">&#125;</span></pre></td></tr></table></figure>
+
+<p>CloudHub启动主要做了3件事：</p>
+<ul>
+<li>为websocket和quic服务注册handler</li>
+<li>启动websocket服务</li>
+<li>启动quic服务</li>
+</ul>
+<p>本文主要分析handler部分。</p>
+<h5 id="1-1-初始化handler"><a href="#1-1-初始化handler" class="headerlink" title="1.1. 初始化handler"></a>1.1. 初始化handler</h5><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">InitHandler</span><span class="params">(eventq *channelq.ChannelMessageQueue)</span></span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">2</span></pre></td><td class="code"><pre><span class="line">    once.Do(<span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">3</span></pre></td><td class="code"><pre><span class="line">        CloudhubHandler = &amp;MessageHandle&#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">4</span></pre></td><td class="code"><pre><span class="line">            KeepaliveInterval: <span class="keyword">int</span>(hubconfig.Config.KeepaliveInterval),</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">5</span></pre></td><td class="code"><pre><span class="line">            WriteTimeout:      <span class="keyword">int</span>(hubconfig.Config.WriteTimeout),</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">6</span></pre></td><td class="code"><pre><span class="line">            MessageQueue:      eventq,</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">7</span></pre></td><td class="code"><pre><span class="line">            NodeLimit:         <span class="keyword">int</span>(hubconfig.Config.NodeLimit),</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">8</span></pre></td><td class="code"><pre><span class="line">        &#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">9</span></pre></td><td class="code"><pre><span class="line"> </span></pre></td></tr><tr><td class="gutter"><pre><span class="line">10</span></pre></td><td class="code"><pre><span class="line">        CloudhubHandler.KeepaliveChannel = <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">11</span></pre></td><td class="code"><pre><span class="line">        CloudhubHandler.Handlers = []HandleFunc&#123; <span class="comment">// 添加3个处理Loop</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">12</span></pre></td><td class="code"><pre><span class="line">            CloudhubHandler.KeepaliveCheckLoop, <span class="comment">// 判断边缘节点是否连接着</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">13</span></pre></td><td class="code"><pre><span class="line">            CloudhubHandler.MessageWriteLoop, <span class="comment">// 处理所有写请求</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">14</span></pre></td><td class="code"><pre><span class="line">            CloudhubHandler.ListMessageWriteLoop, <span class="comment">// 处理所有list资源的写请求</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">15</span></pre></td><td class="code"><pre><span class="line">        &#125; <span class="comment">// 上面后两个Loop分别管理他们对应的消息队列</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">16</span></pre></td><td class="code"><pre><span class="line">        </span></pre></td></tr><tr><td class="gutter"><pre><span class="line">17</span></pre></td><td class="code"><pre><span class="line">        CloudhubHandler.initServerEntries()</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">18</span></pre></td><td class="code"><pre><span class="line">    &#125;)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">19</span></pre></td><td class="code"><pre><span class="line">&#125;</span></pre></td></tr></table></figure>
+
+<p>这里创建了一个CloudhubHandler，它实际上是MessageHandle类型的，用于处理云边之间传递的消息，其结构如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line"><span class="comment">// MessageHandle 处理云边消息</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">2</span></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> MessageHandle <span class="keyword">struct</span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">3</span></pre></td><td class="code"><pre><span class="line">    KeepaliveInterval <span class="keyword">int</span> <span class="comment">// 用于判断边缘节点存活的时间</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">4</span></pre></td><td class="code"><pre><span class="line">    WriteTimeout      <span class="keyword">int</span> <span class="comment">// 写超时，在handleMessage中设置超时</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">5</span></pre></td><td class="code"><pre><span class="line">    Nodes             sync.Map <span class="comment">// nodeID-bool 这三个都是服务启动，节点注册后存进来的</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">6</span></pre></td><td class="code"><pre><span class="line">    nodeConns         sync.Map <span class="comment">// nodeID-hubio.CloudHubIO</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">7</span></pre></td><td class="code"><pre><span class="line">    nodeLocks         sync.Map <span class="comment">// nodeID-&amp;sync.Mutex&#123;&#125;</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">8</span></pre></td><td class="code"><pre><span class="line">    MessageQueue      *channelq.ChannelMessageQueue <span class="comment">//前面提到的信道消息队列</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">9</span></pre></td><td class="code"><pre><span class="line">    Handlers          []HandleFunc <span class="comment">// Loop的集合</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">10</span></pre></td><td class="code"><pre><span class="line">    NodeLimit         <span class="keyword">int</span> <span class="comment">// 边缘节点数量限制，超出限制会在HandleServer报警</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">11</span></pre></td><td class="code"><pre><span class="line">    KeepaliveChannel  <span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125; <span class="comment">// nodeID-channel的map，用于判断边缘存活</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">12</span></pre></td><td class="code"><pre><span class="line">    MessageAcks       sync.Map <span class="comment">// msgID-ackChan</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">13</span></pre></td><td class="code"><pre><span class="line">&#125;</span></pre></td></tr></table></figure>
+
+<p>接着：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(mh *MessageHandle)</span> <span class="title">initServerEntries</span><span class="params">()</span></span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">2</span></pre></td><td class="code"><pre><span class="line">    mux.Entry(mux.NewPattern(<span class="string">"*"</span>).Op(<span class="string">"*"</span>), mh.HandleServer)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">3</span></pre></td><td class="code"><pre><span class="line">&#125;</span></pre></td></tr></table></figure>
+
+<p>到这里，奇怪的知识就多了起来，需要一些解释。</p>
+<p>首先，我们了解一下mux包，它的全称是HTTP request multiplexer，即“HTTP请求多路复用器”，用于将传入的请求和各自的处理程序进行匹配。mux.Entry函数中做了下列事情：</p>
+<p>1） 通过NewMessageMux()函数创建了一个MessageMux对象，其结构如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> MessageMux <span class="keyword">struct</span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">2</span></pre></td><td class="code"><pre><span class="line">   filter   *filter.MessageFilter</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">3</span></pre></td><td class="code"><pre><span class="line">   muxEntry []*MessageMuxEntry</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">4</span></pre></td><td class="code"><pre><span class="line">&#125;</span></pre></td></tr></table></figure>
+
+<p>filter是一个消息过滤器，muxEntry就是存放具体的路由信息的地方了。MessageMuxEntry的结构如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> MessageMuxEntry <span class="keyword">struct</span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">2</span></pre></td><td class="code"><pre><span class="line">	pattern    *MessagePattern</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">3</span></pre></td><td class="code"><pre><span class="line">	handleFunc HandlerFunc</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">4</span></pre></td><td class="code"><pre><span class="line">&#125;</span></pre></td></tr></table></figure>
+
+<p>这里面的两个对象，就是Entry函数的两个参数。</p>
+<p>2） 调用MessageMux.Entry()，将传入的参数组合成上面的MessageMuxEntry对象，并放入muxEntry数组中。这样，处理函数HandleServer()就被注册到MessageMux.muxEntry数组中的MessageMuxEntry对象中了。</p>
+<h5 id="1-2-消息处理函数HandleServer"><a href="#1-2-消息处理函数HandleServer" class="headerlink" title="1.2. 消息处理函数HandleServer"></a>1.2. 消息处理函数HandleServer</h5><p>关于三个HandleFunc和HandleServer函数之间的关系，前者是Loop循环，是信道消息队列的管理者，而后者是消息处理者。其实从后面的分析我们可以发现，前者负责的是云到边的消息，后者负责的是边到云的消息。那么让我们具体看一下HandleServer：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(mh *MessageHandle)</span> <span class="title">HandleServer</span><span class="params">(container *mux.MessageContainer, writer mux.ResponseWriter)</span></span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">2</span></pre></td><td class="code"><pre><span class="line">	nodeID := container.Header.Get(<span class="string">"node_id"</span>)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">3</span></pre></td><td class="code"><pre><span class="line">	projectID := container.Header.Get(<span class="string">"project_id"</span>)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">4</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">5</span></pre></td><td class="code"><pre><span class="line">	<span class="keyword">if</span> mh.GetNodeCount() &gt;= mh.NodeLimit &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">6</span></pre></td><td class="code"><pre><span class="line">		klog.Errorf(<span class="string">"Fail to serve node %s, reach node limit"</span>, nodeID)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">7</span></pre></td><td class="code"><pre><span class="line">		<span class="keyword">return</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">8</span></pre></td><td class="code"><pre><span class="line">	&#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">9</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">10</span></pre></td><td class="code"><pre><span class="line">	<span class="keyword">if</span> container.Message.GetOperation() == model.OpKeepalive &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">11</span></pre></td><td class="code"><pre><span class="line">		klog.Infof(<span class="string">"Keepalive message received from node: %s"</span>, nodeID)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">12</span></pre></td><td class="code"><pre><span class="line">		mh.KeepaliveChannel[nodeID] &lt;- <span class="keyword">struct</span>&#123;&#125;&#123;&#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">13</span></pre></td><td class="code"><pre><span class="line">		<span class="keyword">return</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">14</span></pre></td><td class="code"><pre><span class="line">	&#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">15</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">16</span></pre></td><td class="code"><pre><span class="line">	<span class="comment">// handle the reponse from edge</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">17</span></pre></td><td class="code"><pre><span class="line">	<span class="keyword">if</span> VolumeRegExp.MatchString(container.Message.GetResource()) &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">18</span></pre></td><td class="code"><pre><span class="line">		beehiveContext.SendResp(*container.Message)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">19</span></pre></td><td class="code"><pre><span class="line">		<span class="keyword">return</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">20</span></pre></td><td class="code"><pre><span class="line">	&#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">21</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">22</span></pre></td><td class="code"><pre><span class="line">	<span class="comment">// handle the ack message from edge</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">23</span></pre></td><td class="code"><pre><span class="line">	<span class="keyword">if</span> container.Message.Router.Operation == beehiveModel.ResponseOperation &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">24</span></pre></td><td class="code"><pre><span class="line">		<span class="keyword">if</span> ackChan, ok := mh.MessageAcks.Load(container.Message.Header.ParentID); ok &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">25</span></pre></td><td class="code"><pre><span class="line">			<span class="built_in">close</span>(ackChan.(<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;))</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">26</span></pre></td><td class="code"><pre><span class="line">			mh.MessageAcks.Delete(container.Message.Header.ParentID)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">27</span></pre></td><td class="code"><pre><span class="line">		&#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">28</span></pre></td><td class="code"><pre><span class="line">		<span class="keyword">return</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">29</span></pre></td><td class="code"><pre><span class="line">	&#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">30</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">31</span></pre></td><td class="code"><pre><span class="line">	err := mh.PubToController(&amp;model.HubInfo&#123;ProjectID: projectID, NodeID: nodeID&#125;, container.Message)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">32</span></pre></td><td class="code"><pre><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">33</span></pre></td><td class="code"><pre><span class="line">		<span class="comment">// if err, we should stop node, write data to edgehub, stop nodify</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">34</span></pre></td><td class="code"><pre><span class="line">		klog.Errorf(<span class="string">"Failed to serve handle with error: %s"</span>, err.Error())</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">35</span></pre></td><td class="code"><pre><span class="line">	&#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">36</span></pre></td><td class="code"><pre><span class="line">&#125;</span></pre></td></tr></table></figure>
+
+<p>HandleServer处理所有边缘节点发出的请求，里面主要做了下列处理：</p>
+<ul>
+<li>判断节点数是否达到上限</li>
+<li>判断边缘节点是否保持连接</li>
+<li>处理response类型的消息，将消息送入beehiveContext中信道上下文的annoChannels中对应的信道</li>
+<li>处理ack类型的消息，关闭并删除MessageAcks中对应的信道</li>
+<li>将消息分发给控制器</li>
+</ul>
+<p>深入分析最后这一步发现，它其实还是通过beehiveContext的SendToGroup()函数实现的消息分发，属于组件间消息传递，毋庸赘言。</p>
+<p>到这里，我们可以发现，HandleServer主要负责处理边缘节点发往云端的消息，并保持连接。</p>
+<h5 id="1-3-信道消息队列的管理者Loop"><a href="#1-3-信道消息队列的管理者Loop" class="headerlink" title="1.3. 信道消息队列的管理者Loop"></a>1.3. 信道消息队列的管理者Loop</h5><p>既然HandleServer负责了边到云的消息传送，那么Loop是否就负责云到边的消息传送了呢？MessageHandle中一共有三个Loop，分别负责保持连接和处理两种写请求，我们逐一分析：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(mh *MessageHandle)</span> <span class="title">KeepaliveCheckLoop</span><span class="params">(hi hubio.CloudHubIO, info *model.HubInfo, stopServe <span class="keyword">chan</span> ExitCode, stopSendMsg <span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;)</span></span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">2</span></pre></td><td class="code"><pre><span class="line">    keepaliveTicker := time.NewTimer(time.Duration(mh.KeepaliveInterval) * time.Second)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">3</span></pre></td><td class="code"><pre><span class="line">    <span class="keyword">for</span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">4</span></pre></td><td class="code"><pre><span class="line">        <span class="keyword">select</span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">5</span></pre></td><td class="code"><pre><span class="line">        <span class="keyword">case</span> _, ok := &lt;-mh.KeepaliveChannel[info.NodeID]:</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">6</span></pre></td><td class="code"><pre><span class="line">            <span class="keyword">if</span> !ok &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">7</span></pre></td><td class="code"><pre><span class="line">                <span class="keyword">return</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">8</span></pre></td><td class="code"><pre><span class="line">            &#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">9</span></pre></td><td class="code"><pre><span class="line">            klog.Infof(<span class="string">"Node %s is still alive"</span>, info.NodeID)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">10</span></pre></td><td class="code"><pre><span class="line">            keepaliveTicker.Reset(time.Duration(mh.KeepaliveInterval) * time.Second)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">11</span></pre></td><td class="code"><pre><span class="line">        <span class="keyword">case</span> &lt;-keepaliveTicker.C:</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">12</span></pre></td><td class="code"><pre><span class="line">            klog.Warningf(<span class="string">"Timeout to receive heart beat from edge node %s for project %s"</span>,</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">13</span></pre></td><td class="code"><pre><span class="line">                info.NodeID, info.ProjectID)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">14</span></pre></td><td class="code"><pre><span class="line">            stopServe &lt;- nodeDisconnect</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">15</span></pre></td><td class="code"><pre><span class="line">            <span class="built_in">close</span>(stopSendMsg)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">16</span></pre></td><td class="code"><pre><span class="line">            <span class="keyword">return</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">17</span></pre></td><td class="code"><pre><span class="line">        &#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">18</span></pre></td><td class="code"><pre><span class="line">    &#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">19</span></pre></td><td class="code"><pre><span class="line">&#125;</span></pre></td></tr></table></figure>
+
+<p>KeepaliveCheckLoop主要通过相应的信道检查边缘节点是否保持连接，并在断开链接后通知停止消息传输。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(mh *MessageHandle)</span> <span class="title">MessageWriteLoop</span><span class="params">(hi hubio.CloudHubIO, info *model.HubInfo, stopServe <span class="keyword">chan</span> ExitCode, stopSendMsg <span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;)</span></span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">2</span></pre></td><td class="code"><pre><span class="line">    nodeQueue, err := mh.MessageQueue.GetNodeQueue(info.NodeID)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">3</span></pre></td><td class="code"><pre><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">4</span></pre></td><td class="code"><pre><span class="line">        klog.Errorf(<span class="string">"Failed to get nodeQueue for node %s: %v"</span>, info.NodeID, err)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">5</span></pre></td><td class="code"><pre><span class="line">        stopServe &lt;- messageQueueDisconnect</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">6</span></pre></td><td class="code"><pre><span class="line">        <span class="keyword">return</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">7</span></pre></td><td class="code"><pre><span class="line">    &#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">8</span></pre></td><td class="code"><pre><span class="line">    nodeStore, err := mh.MessageQueue.GetNodeStore(info.NodeID)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">9</span></pre></td><td class="code"><pre><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">10</span></pre></td><td class="code"><pre><span class="line">        klog.Errorf(<span class="string">"Failed to get nodeStore for node %s: %v"</span>, info.NodeID, err)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">11</span></pre></td><td class="code"><pre><span class="line">        stopServe &lt;- messageQueueDisconnect</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">12</span></pre></td><td class="code"><pre><span class="line">        <span class="keyword">return</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">13</span></pre></td><td class="code"><pre><span class="line">    &#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">14</span></pre></td><td class="code"><pre><span class="line"> </span></pre></td></tr><tr><td class="gutter"><pre><span class="line">15</span></pre></td><td class="code"><pre><span class="line">    <span class="keyword">for</span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">16</span></pre></td><td class="code"><pre><span class="line">        <span class="keyword">select</span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">17</span></pre></td><td class="code"><pre><span class="line">        <span class="keyword">case</span> &lt;-stopSendMsg:</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">18</span></pre></td><td class="code"><pre><span class="line">            klog.Errorf(<span class="string">"Node %s disconnected and stopped sending messages"</span>, info.NodeID)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">19</span></pre></td><td class="code"><pre><span class="line">            <span class="keyword">return</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">20</span></pre></td><td class="code"><pre><span class="line">        <span class="keyword">default</span>:</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">21</span></pre></td><td class="code"><pre><span class="line">            mh.handleMessage(nodeQueue, nodeStore, hi, info, stopServe, <span class="string">"message"</span>)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">22</span></pre></td><td class="code"><pre><span class="line">        &#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">23</span></pre></td><td class="code"><pre><span class="line">    &#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">24</span></pre></td><td class="code"><pre><span class="line">&#125;</span></pre></td></tr></table></figure>
+
+<p>MessageWriteLoop和ListMessageWriteLoop的结构大体是相似的，前面都从信道消息队列中获取到了节点的nodeQueue和nodeStore，根据前面的分析可知里面存着要发往边缘节点的消息ID和消息。重点在于handelMessage这个函数，显然，它是处理云往边发送消息的重点。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(mh *MessageHandle)</span> <span class="title">handleMessage</span><span class="params">(nodeQueue workqueue.RateLimitingInterface,</span></span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">2</span></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="params">    nodeStore cache.Store, hi hubio.CloudHubIO,</span></span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">3</span></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="params">    info *model.HubInfo, stopServe <span class="keyword">chan</span> ExitCode, msgType <span class="keyword">string</span>)</span></span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">4</span></pre></td><td class="code"><pre><span class="line">    key, quit := nodeQueue.Get()</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">5</span></pre></td><td class="code"><pre><span class="line">    <span class="keyword">if</span> quit &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">6</span></pre></td><td class="code"><pre><span class="line">        klog.Errorf(<span class="string">"nodeQueue for node %s has shutdown"</span>, info.NodeID)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">7</span></pre></td><td class="code"><pre><span class="line">        <span class="keyword">return</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">8</span></pre></td><td class="code"><pre><span class="line">    &#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">9</span></pre></td><td class="code"><pre><span class="line">    obj, exist, _ := nodeStore.GetByKey(key.(<span class="keyword">string</span>))</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">10</span></pre></td><td class="code"><pre><span class="line">    <span class="keyword">if</span> !exist &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">11</span></pre></td><td class="code"><pre><span class="line">        klog.Errorf(<span class="string">"nodeStore for node %s doesn't exist"</span>, info.NodeID)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">12</span></pre></td><td class="code"><pre><span class="line">        <span class="keyword">return</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">13</span></pre></td><td class="code"><pre><span class="line">    &#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">14</span></pre></td><td class="code"><pre><span class="line"> </span></pre></td></tr><tr><td class="gutter"><pre><span class="line">15</span></pre></td><td class="code"><pre><span class="line">    msg := obj.(*beehiveModel.Message)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">16</span></pre></td><td class="code"><pre><span class="line">    <span class="comment">// 判断消息能否顺利传输</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">17</span></pre></td><td class="code"><pre><span class="line">    <span class="keyword">if</span> model.IsNodeStopped(msg) &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">18</span></pre></td><td class="code"><pre><span class="line">        klog.Infof(<span class="string">"node %s is stopped, will disconnect"</span>, info.NodeID)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">19</span></pre></td><td class="code"><pre><span class="line">        stopServe &lt;- nodeStop</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">20</span></pre></td><td class="code"><pre><span class="line">        <span class="keyword">return</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">21</span></pre></td><td class="code"><pre><span class="line">    &#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">22</span></pre></td><td class="code"><pre><span class="line">    <span class="keyword">if</span> !model.IsToEdge(msg) &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">23</span></pre></td><td class="code"><pre><span class="line">        klog.Infof(<span class="string">"skip only to cloud event for node %s, %s, content %s"</span>, info.NodeID, dumpMessageMetadata(msg), msg.Content)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">24</span></pre></td><td class="code"><pre><span class="line">        <span class="keyword">return</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">25</span></pre></td><td class="code"><pre><span class="line">    &#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">26</span></pre></td><td class="code"><pre><span class="line">    klog.V(<span class="number">4</span>).Infof(<span class="string">"event to send for node %s, %s, content %s"</span>, info.NodeID, dumpMessageMetadata(msg), msg.Content)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">27</span></pre></td><td class="code"><pre><span class="line">    <span class="comment">// 对于非list消息需要接收ack并保存副本</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">28</span></pre></td><td class="code"><pre><span class="line">    copyMsg := deepcopy(msg)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">29</span></pre></td><td class="code"><pre><span class="line">    <span class="comment">// 为消息设置resources和operation</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">30</span></pre></td><td class="code"><pre><span class="line">    trimMessage(msg)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">31</span></pre></td><td class="code"><pre><span class="line">    err := hi.SetWriteDeadline(time.Now().Add(time.Duration(mh.WriteTimeout) * time.Second))</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">32</span></pre></td><td class="code"><pre><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">33</span></pre></td><td class="code"><pre><span class="line">        klog.Errorf(<span class="string">"SetWriteDeadline error, %s"</span>, err.Error())</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">34</span></pre></td><td class="code"><pre><span class="line">        stopServe &lt;- hubioWriteFail</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">35</span></pre></td><td class="code"><pre><span class="line">        <span class="keyword">return</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">36</span></pre></td><td class="code"><pre><span class="line">    &#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">37</span></pre></td><td class="code"><pre><span class="line">    <span class="keyword">if</span> msgType == <span class="string">"listMessage"</span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">38</span></pre></td><td class="code"><pre><span class="line">        mh.send(hi, info, msg)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">39</span></pre></td><td class="code"><pre><span class="line">        nodeStore.Delete(msg)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">40</span></pre></td><td class="code"><pre><span class="line">    &#125; <span class="keyword">else</span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">41</span></pre></td><td class="code"><pre><span class="line">        mh.sendMsg(hi, info, msg, copyMsg, nodeStore)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">42</span></pre></td><td class="code"><pre><span class="line">    &#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">43</span></pre></td><td class="code"><pre><span class="line"> </span></pre></td></tr><tr><td class="gutter"><pre><span class="line">44</span></pre></td><td class="code"><pre><span class="line">    nodeQueue.Done(key)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">45</span></pre></td><td class="code"><pre><span class="line">&#125;</span></pre></td></tr></table></figure>
+
+<p>首先取出之前存进去的messagekey和msg，quit和exist用于判断nodeQueue和nodeStore是否存在。然后判断边缘节点是否正常连接，判断消息是否是发往边缘节点的，判断完毕一切正常后开始发送。</p>
+<p>首先，对消息做一个深拷贝，得到一个copyMsg，它主要用于非list消息，需要保存副本。然后为消息设置resource和operation。最后，如果是list类型的消息，直接通过hubIO发送到边缘，并删除云端nodeStore中存储的消息。而对于非list型的消息，我们需要为其在MessageAcks中创建一个信道，然后也通过hubIO发送到边缘。而边缘发回的ack消息，就由前面提到的HandleServer来处理了。</p>
+<h4 id="2-启动通信服务"><a href="#2-启动通信服务" class="headerlink" title="2. 启动通信服务"></a>2. 启动通信服务</h4><p>分析完消息处理函数，接下来便是通信服务。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">startWebsocketServer</span><span class="params">()</span></span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">2</span></pre></td><td class="code"><pre><span class="line">   tlsConfig := createTLSConfig(hubconfig.Config.Ca, hubconfig.Config.Cert, hubconfig.Config.Key)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">3</span></pre></td><td class="code"><pre><span class="line">   svc := server.Server&#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">4</span></pre></td><td class="code"><pre><span class="line">      Type:       api.ProtocolTypeWS, <span class="comment">// 协议类型：WebSocket</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">5</span></pre></td><td class="code"><pre><span class="line">      TLSConfig:  &amp;tlsConfig,</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">6</span></pre></td><td class="code"><pre><span class="line">      AutoRoute:  <span class="literal">true</span>,</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">7</span></pre></td><td class="code"><pre><span class="line">      ConnNotify: handler.CloudhubHandler.OnRegister, <span class="comment">// 注册连接</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">8</span></pre></td><td class="code"><pre><span class="line">      Addr:       fmt.Sprintf(<span class="string">"%s:%d"</span>, hubconfig.Config.WebSocket.Address, hubconfig.Config.WebSocket.Port),</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">9</span></pre></td><td class="code"><pre><span class="line">      ExOpts:     api.WSServerOption&#123;Path: <span class="string">"/"</span>&#125;,</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">10</span></pre></td><td class="code"><pre><span class="line">   &#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">11</span></pre></td><td class="code"><pre><span class="line">   klog.Infof(<span class="string">"Startting cloudhub %s server"</span>, api.ProtocolTypeWS)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">12</span></pre></td><td class="code"><pre><span class="line">   svc.ListenAndServeTLS(<span class="string">""</span>, <span class="string">""</span>)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">13</span></pre></td><td class="code"><pre><span class="line">&#125;</span></pre></td></tr></table></figure>
+
+<p>由于KubeEdge在部署的时候就准备了ca证书，我们可以使用安全的TSL通信。Server中比较关键的是ConnNotify这个成员，通过它就和上一篇文章中的CloudhubHandler联系起来了，它用于注册边缘到云端的连接，主要做了以下几件事：</p>
+<ul>
+<li>在KeepaliveChannel中建立自己的Channel来保持连接</li>
+<li>获取IO</li>
+<li>开启一个该连接的服务goroutine，将这个节点注册到信道消息队列和MessageHandler的三个Map中去；开启3个Loop的goroutine，这样，云到边的消息处理部分就准备好了</li>
+</ul>
+<p>最后，启动监听，并将监听到的消息给HandleServer处理。</p>
+<p>QuicServer在功能上和WebSocketServer没有什么本质的区别，代码结构也基本一致，在此略过，有兴趣的读者可以自行分析。</p>
+
+    </div>
+
+    
+    
+    
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>RongAI
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="/http:/www.t4l2.com/2020-04-14-KubeEdge%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E4%B9%8BCloudHub%EF%BC%88%E4%BA%8C%EF%BC%89.html" title="KubeEdge源码分析之CloudHub（二）">http://www.t4l2.com/2020-04-14-KubeEdge源码分析之CloudHub（二）.html</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/kubeedge/" rel="tag"><i class="fa fa-tag"></i> kubeedge</a>
+              <a href="/tags/cloudhub/" rel="tag"><i class="fa fa-tag"></i> cloudhub</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020-04-14-KubeEdge%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E4%B9%8BCloudHub%EF%BC%88%E4%B8%80%EF%BC%89.html" rel="prev" title="KubeEdge源码分析之CloudHub（一）">
+      <i class="fa fa-chevron-left"></i> KubeEdge源码分析之CloudHub（一）
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020-04-17-KubeEdge%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E4%B9%8BDeviceController.html" rel="next" title="KubeEdge源码分析之DeviceController">
+      KubeEdge源码分析之DeviceController <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-CloudHub服务之InitHandler"><span class="nav-text">1. CloudHub服务之InitHandler()</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1-1-初始化handler"><span class="nav-text">1.1. 初始化handler</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#1-2-消息处理函数HandleServer"><span class="nav-text">1.2. 消息处理函数HandleServer</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#1-3-信道消息队列的管理者Loop"><span class="nav-text">1.3. 信道消息队列的管理者Loop</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-启动通信服务"><span class="nav-text">2. 启动通信服务</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="RongAI"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">RongAI</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">19</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/majoyz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;majoyz" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:imzmj@outlook.com" title="E-Mail → mailto:imzmj@outlook.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">RongAI</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
