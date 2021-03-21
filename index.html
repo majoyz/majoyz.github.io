@@ -203,61 +203,15 @@
           <h4 id="0-引言"><a href="#0-引言" class="headerlink" title="0. 引言"></a>0. 引言</h4><p>Golang 1.11版本引入了Go.mod作为官方的包管理工具。</p>
 <p>Go.mod，也就是Module。Module是相关Go包的集合，是源代码交换和版本控制的单元。Modules替换旧的基于GOPATH的方法，来指定使用哪些源文件。</p>
 <p>在引入go.mod之前，项目必须放在$GOPATH/src目录下，依赖要靠手动管理，并且依赖包没有版本一说，对开发造成了极大的困扰。之后的vendor部分解决了上述问题，但是依赖包需要全部下载到项目的vendor路径下。go.mod则将依赖包默认下载到$GOPATH/pkg/mod路径下，减少开发者对依赖的关心，只需关注个人代码，同时减轻了push/pull压力，也避免了他人随意修改依赖。</p>
-<h4 id="1-go-mod命令"><a href="#1-go-mod命令" class="headerlink" title="1. go mod命令"></a>1. go mod命令</h4><p>Golang提供了go mod命令来管理包，主要包含以下命令：</p>
-<table>
-<thead>
-<tr>
-<th>命令</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>download</td>
-<td>下载依赖包</td>
-</tr>
-<tr>
-<td>edit</td>
-<td>编辑go.mod</td>
-</tr>
-<tr>
-<td>graph</td>
-<td>打印模块依赖图</td>
-</tr>
-<tr>
-<td>init</td>
-<td>在当前目录初始化mod</td>
-</tr>
-<tr>
-<td>tidy</td>
-<td>拉取缺少的模块，移除不用的模块</td>
-</tr>
-<tr>
-<td>vendor</td>
-<td>将依赖复制到vendor下</td>
-</tr>
-<tr>
-<td>verify</td>
-<td>验证以来是否正确</td>
-</tr>
-<tr>
-<td>why</td>
-<td>解释为什么需要依赖</td>
-</tr>
-</tbody></table>
-<p>这里面init、tidy、和edit相对常用。</p>
-<h4 id="2-go-mod的使用"><a href="#2-go-mod的使用" class="headerlink" title="2. go.mod的使用"></a>2. go.mod的使用</h4><p>要使用go.mod，要将Golang版本升级到1.11以上，并将环境变量GO111MODULE改为on。</p>
-<p>go.mod使用后，避免了项目只能放在$GOPATH/src下的问题，可以在任意位置创建项目。项目创建后，即可初始化go.mod。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line">go mod init &lt;pkg_path&gt;</span></pre></td></tr></table></figure>
-
-<p>go.mod文件主要包含以下内容。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line">module &lt;pkg_path&gt; &#x2F;&#x2F;项目名称或路径</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">2</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">3</span></pre></td><td class="code"><pre><span class="line">go 1.14 &#x2F;&#x2F; Golang版本</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">4</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">5</span></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F; 依赖项模块</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">6</span></pre></td><td class="code"><pre><span class="line">require (</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">7</span></pre></td><td class="code"><pre><span class="line">    k8s.io&#x2F;klog&#x2F;v2 v2.8.0</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">8</span></pre></td><td class="code"><pre><span class="line">    ...</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">9</span></pre></td><td class="code"><pre><span class="line">)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">10</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">11</span></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F; 可替换依赖项模块</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">12</span></pre></td><td class="code"><pre><span class="line">replace (</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">13</span></pre></td><td class="code"><pre><span class="line">    golang.org&#x2F;x&#x2F;crypto v0.0.0-20190313024323-a1f597ede03a &#x3D;&gt; github.com&#x2F;golang&#x2F;crypto v0.0.0-20190313024323-a1f597ede03a</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">14</span></pre></td><td class="code"><pre><span class="line">    ...</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">15</span></pre></td><td class="code"><pre><span class="line">)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">16</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">17</span></pre></td><td class="code"><pre><span class="line">exclude (</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">18</span></pre></td><td class="code"><pre><span class="line">    &#x2F;&#x2F; 可忽略依赖项模块</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">19</span></pre></td><td class="code"><pre><span class="line">)</span></pre></td></tr></table></figure>
-
-<p>刚刚创建好的go.mod文件一般只包含项目名称和Golang版本，但是go.mod文件创建好之后，go run等命令即可自动更新go.mod文件，自动查找项目中的依赖项并下载。其下载原则是优先拉取最新的release tag，其次是最新的commit。此外go还会自动生成go.sum文件记录依赖树。</p>
-<p>replace用于替换无法直接获取的包或失效的包，例如将golang.org上的包替换成GitHub上对应的库，也可以在fork他人项目进行修改时将git上的依赖包替换为本地。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line">replace github.com&#x2F;kubeedge&#x2F;mapper-go &#x3D;&gt; .&#x2F;mappers-go</span></pre></td></tr></table></figure>
-
-<p>go.mod中常常会见到一长串的版本信息，默认为v0.0.0-&lt;time&gt;-&lt;commit_id&gt;。这种情况往往是依赖没有tag，版本信息来自于commit，实质上没有进行版本控制管理，不建议。</p>
-
+<h4 id="1-go-mod命令"><a href="#1-go-mod命令" class="headerlink" title="1. go mod命令"></a>1. go mod命令</h4>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021-03-21-Go%E5%9F%BA%E7%A1%80%E4%B9%8BModules.html#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
